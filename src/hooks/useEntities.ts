@@ -2,41 +2,50 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Customer, Supplier, PaymentMethod } from '@/types/database'
 
+// ── Helper: تجاوز Supabase type restrictions بشكل آمن ──────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
+
 // ── CUSTOMERS ──────────────────────────────────────────────────
 const CUSTOMERS_KEY = 'customers'
 
 async function fetchCustomers(): Promise<Customer[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('customers').select('*').eq('is_deleted', false).order('name')
   if (error) throw new Error(error.message)
-  return (data ?? []) as unknown as Customer[]
+  return (data ?? []) as Customer[]
 }
 
 async function createCustomer(p: Record<string, unknown>): Promise<Customer> {
-  const { data, error } = await supabase.from('customers').insert(p).select().single()
+  const { data, error } = await db.from('customers').insert(p).select().single()
   if (error) throw new Error(error.message)
-  return data as unknown as Customer
+  return data as Customer
 }
 
 async function updateCustomer(id: string, p: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.from('customers').update(p).eq('id', id)
+  const { error } = await db.from('customers').update(p).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteCustomer(id: string): Promise<void> {
-  const { error } = await supabase.from('customers').update({ is_deleted: true }).eq('id', id)
+  const { error } = await db.from('customers').update({ is_deleted: true }).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
-async function payCustomerDebt(id: string, amount: number, method: PaymentMethod, notes?: string) {
-  const { error } = await supabase.rpc('pay_customer_debt' as never, {
-    p_customer_id: id, p_amount: amount,
-    p_payment_method: method, p_user_id: null, p_notes: notes ?? null,
-  } as never)
+async function payCustomerDebt(
+  id: string, amount: number, method: PaymentMethod, notes?: string
+): Promise<void> {
+  const { error } = await db.rpc('pay_customer_debt', {
+    p_customer_id:    id,
+    p_amount:         amount,
+    p_payment_method: method,
+    p_user_id:        null,
+    p_notes:          notes ?? null,
+  })
   if (error) throw new Error(error.message)
 }
 
-export const useCustomers     = () => useQuery({ queryKey: [CUSTOMERS_KEY], queryFn: fetchCustomers })
+export const useCustomers = () => useQuery({ queryKey: [CUSTOMERS_KEY], queryFn: fetchCustomers })
 
 export function useCreateCustomer() {
   const qc = useQueryClient()
@@ -76,29 +85,29 @@ export function usePayCustomerDebt() {
 const SUPPLIERS_KEY = 'suppliers'
 
 async function fetchSuppliers(): Promise<Supplier[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('suppliers').select('*').eq('is_deleted', false).order('name')
   if (error) throw new Error(error.message)
-  return (data ?? []) as unknown as Supplier[]
+  return (data ?? []) as Supplier[]
 }
 
 async function createSupplier(p: Record<string, unknown>): Promise<Supplier> {
-  const { data, error } = await supabase.from('suppliers').insert(p).select().single()
+  const { data, error } = await db.from('suppliers').insert(p).select().single()
   if (error) throw new Error(error.message)
-  return data as unknown as Supplier
+  return data as Supplier
 }
 
 async function updateSupplier(id: string, p: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.from('suppliers').update(p).eq('id', id)
+  const { error } = await db.from('suppliers').update(p).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteSupplier(id: string): Promise<void> {
-  const { error } = await supabase.from('suppliers').update({ is_deleted: true }).eq('id', id)
+  const { error } = await db.from('suppliers').update({ is_deleted: true }).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
-export const useSuppliers     = () => useQuery({ queryKey: [SUPPLIERS_KEY], queryFn: fetchSuppliers })
+export const useSuppliers = () => useQuery({ queryKey: [SUPPLIERS_KEY], queryFn: fetchSuppliers })
 
 export function useCreateSupplier() {
   const qc = useQueryClient()
@@ -139,29 +148,29 @@ export interface CompletePurchasePayload {
   notes?:         string | null
 }
 
-async function fetchPurchases() {
-  const { data, error } = await supabase
+async function fetchPurchases(): Promise<Record<string, unknown>[]> {
+  const { data, error } = await db
     .from('v_purchases_report').select('*').order('purchase_date', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []) as Record<string, unknown>[]
 }
 
-async function fetchPurchaseDetails(id: string) {
-  const { data, error } = await supabase
+async function fetchPurchaseDetails(id: string): Promise<Record<string, unknown>[]> {
+  const { data, error } = await db
     .from('v_purchase_details').select('*').eq('purchase_id', id)
   if (error) throw new Error(error.message)
   return data ?? []
 }
 
 async function completePurchase(payload: CompletePurchasePayload) {
-  const { data, error } = await supabase.rpc('complete_purchase' as never, {
+  const { data, error } = await db.rpc('complete_purchase', {
     p_supplier_id:    payload.supplier_id,
     p_items:          payload.items,
     p_paid_amount:    payload.paid_amount,
     p_payment_method: payload.payment_method,
     p_user_id:        null,
     p_notes:          payload.notes ?? null,
-  } as never)
+  })
   if (error) throw new Error(error.message)
   return (data as { purchase_id: string; invoice_number: string }[])?.[0]
 }
