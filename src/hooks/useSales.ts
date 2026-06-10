@@ -64,8 +64,10 @@ export function useDailySummary() {
     queryKey: ['reports', 'daily-summary'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('v_daily_summary').select('*')
-        .order('sale_date', { ascending: false }).limit(30)
+        .from('v_daily_summary')
+        .select('*')
+        .order('sale_date', { ascending: false })
+        .limit(30)
       if (error) throw new Error(error.message)
       return (data ?? []) as Record<string, unknown>[]
     },
@@ -77,11 +79,13 @@ export function useProfitSummary(periodType: 'daily' | 'weekly' | 'monthly' = 'm
     queryKey: ['reports', 'profit-summary', periodType],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('v_profit_summary').select('*')
+        .from('v_profit_summary')
+        .select('*')
         .eq('period_type', periodType)
-        .order('period_start', { ascending: false }).limit(12)
+        .order('period_start', { ascending: false })
+        .limit(12)
       if (error) throw new Error(error.message)
-      return data ?? []
+      return (data ?? []) as Record<string, unknown>[]
     },
   })
 }

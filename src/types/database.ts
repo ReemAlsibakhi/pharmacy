@@ -328,39 +328,49 @@ export interface ProfitSummaryRow {
   total_discounts:       number
 }
 
-// ── Supabase Database Type (للاستخدام مع createClient) ─────────
+// ── Row type helper ───────────────────────────────────────────
+type TableDef<R> = {
+  Row:    R
+  Insert: Record<string, unknown>
+  Update: Record<string, unknown>
+}
+
+// ── Supabase Database Type ─────────────────────────────────────
 export interface Database {
   public: {
     Tables: {
-      products:               { Row: Product;            Insert: Partial<Product>;            Update: Partial<Product> }
-      batches:                { Row: Batch;              Insert: Partial<Batch>;              Update: Partial<Batch> }
-      sales:                  { Row: Sale;               Insert: Partial<Sale>;               Update: Partial<Sale> }
-      sale_items:             { Row: SaleItem;           Insert: Partial<SaleItem>;           Update: Partial<SaleItem> }
-      purchases:              { Row: Purchase;           Insert: Partial<Purchase>;           Update: Partial<Purchase> }
-      purchase_items:         { Row: PurchaseItem;       Insert: Partial<PurchaseItem>;       Update: Partial<PurchaseItem> }
-      refunds:                { Row: Refund;             Insert: Partial<Refund>;             Update: Partial<Refund> }
-      refund_items:           { Row: RefundItem;         Insert: Partial<RefundItem>;         Update: Partial<RefundItem> }
-      customers:              { Row: Customer;           Insert: Partial<Customer>;           Update: Partial<Customer> }
-      suppliers:              { Row: Supplier;           Insert: Partial<Supplier>;           Update: Partial<Supplier> }
-      categories:             { Row: Category;           Insert: Partial<Category>;           Update: Partial<Category> }
-      companies:              { Row: Company;            Insert: Partial<Company>;            Update: Partial<Company> }
-      units:                  { Row: Unit;               Insert: Partial<Unit>;               Update: Partial<Unit> }
-      dosage_forms:           { Row: DosageForm;         Insert: Partial<DosageForm>;         Update: Partial<DosageForm> }
-      roles:                  { Row: Role;               Insert: Partial<Role>;               Update: Partial<Role> }
-      users:                  { Row: User;               Insert: Partial<User>;               Update: Partial<User> }
-      debt_payments:          { Row: DebtPayment;        Insert: Partial<DebtPayment>;        Update: Partial<DebtPayment> }
-      operational_expenses:   { Row: OperationalExpense; Insert: Partial<OperationalExpense>; Update: Partial<OperationalExpense> }
-      cash_register:          { Row: CashRegister;       Insert: Partial<CashRegister>;       Update: Partial<CashRegister> }
-      transactions:           { Row: Record<string,Json>; Insert: Record<string,Json>; Update: Record<string,Json> }
-      audit_log:              { Row: Record<string,Json>; Insert: Record<string,Json>; Update: Record<string,Json> }
-      inventory_transactions: { Row: Record<string,Json>; Insert: Record<string,Json>; Update: Record<string,Json> }
-      product_alternatives:   { Row: Record<string,Json>; Insert: Record<string,Json>; Update: Record<string,Json> }
-      invoice_sequences:      { Row: Record<string,Json>; Insert: Record<string,Json>; Update: Record<string,Json> }
+      products:               TableDef<Product>
+      batches:                TableDef<Batch>
+      sales:                  TableDef<Sale>
+      sale_items:             TableDef<SaleItem>
+      purchases:              TableDef<Purchase>
+      purchase_items:         TableDef<PurchaseItem>
+      refunds:                TableDef<Refund>
+      refund_items:           TableDef<RefundItem>
+      customers:              TableDef<Customer>
+      suppliers:              TableDef<Supplier>
+      categories:             TableDef<Category>
+      companies:              TableDef<Company>
+      units:                  TableDef<Unit>
+      dosage_forms:           TableDef<DosageForm>
+      roles:                  TableDef<Role>
+      users:                  TableDef<User>
+      debt_payments:          TableDef<DebtPayment>
+      operational_expenses:   TableDef<OperationalExpense>
+      cash_register:          TableDef<CashRegister>
+      transactions:           TableDef<Record<string, Json>>
+      audit_log:              TableDef<Record<string, Json>>
+      inventory_transactions: TableDef<Record<string, Json>>
+      product_alternatives:   TableDef<Record<string, Json>>
+      invoice_sequences:      TableDef<Record<string, Json>>
     }
     Views: {
       v_inventory_report:    { Row: InventoryReportRow }
       v_stock_alerts:        { Row: StockAlertRow }
       v_profit_summary:      { Row: ProfitSummaryRow }
+      v_daily_summary:       { Row: Record<string, Json> }
+      v_purchases_report:    { Row: Record<string, Json> }
+      v_purchase_details:    { Row: Record<string, Json> }
     }
     Functions: {
       complete_sale:     { Args: Record<string,unknown>; Returns: { sale_id: string; invoice_number: string }[] }

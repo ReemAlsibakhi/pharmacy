@@ -29,18 +29,28 @@ async function fetchProductByBarcode(barcode: string): Promise<Product | null> {
 }
 
 async function createProduct(payload: Record<string, unknown>): Promise<Product> {
-  const { data, error } = await supabase.from('products').insert(payload).select().single()
+  const { data, error } = await supabase
+    .from('products')
+    .insert(payload)
+    .select()
+    .single()
   if (error) throw new Error(error.message)
   return data as unknown as Product
 }
 
 async function updateProduct(id: string, payload: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.from('products').update(payload).eq('id', id)
+  const { error } = await supabase
+    .from('products')
+    .update(payload)
+    .eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteProduct(id: string): Promise<void> {
-  const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id)
+  const { error } = await supabase
+    .from('products')
+    .update({ is_active: false })
+    .eq('id', id)
   if (error) throw new Error(error.message)
 }
 
@@ -86,9 +96,11 @@ export function useInventoryReport() {
     queryKey: [QUERY_KEY, 'inventory-report'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('v_inventory_report').select('*').order('name_ar')
+        .from('v_inventory_report')
+        .select('*')
+        .order('name_ar')
       if (error) throw new Error(error.message)
-      return (data ?? []) as InventoryReportRow[]
+      return (data ?? []) as unknown as InventoryReportRow[]
     },
   })
 }
@@ -97,9 +109,11 @@ export function useStockAlerts() {
   return useQuery({
     queryKey: [QUERY_KEY, 'stock-alerts'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('v_stock_alerts').select('*')
+      const { data, error } = await supabase
+        .from('v_stock_alerts')
+        .select('*')
       if (error) throw new Error(error.message)
-      return data ?? []
+      return (data ?? []) as Record<string, unknown>[]
     },
     refetchInterval: 1000 * 60 * 5,
   })
