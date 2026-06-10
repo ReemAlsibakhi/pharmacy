@@ -1,20 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
-const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey  = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Vite injects these at build time — defined in .env.local or Vercel env vars
+const supabaseUrl = (import.meta as unknown as { env: Record<string, string> }).env.VITE_SUPABASE_URL
+const supabaseKey = (import.meta as unknown as { env: Record<string, string> }).env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error(
-    'Missing Supabase environment variables.\n' +
-    'Create a .env.local file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
+    'Missing Supabase env vars.\n' +
+    'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local'
   )
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession:    true,
-    autoRefreshToken:  true,
+    persistSession:     true,
+    autoRefreshToken:   true,
     detectSessionInUrl: true,
   },
 })

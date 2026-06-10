@@ -6,11 +6,13 @@ import { queryClient } from '@/lib/queryClient'
 import App from './App'
 import './index.css'
 
+const isDev = (import.meta as unknown as { env: Record<string, string> }).env.DEV
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      {isDev && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   </React.StrictMode>
 )

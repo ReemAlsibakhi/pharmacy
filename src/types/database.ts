@@ -295,6 +295,7 @@ export interface InventoryReportRow {
   nearest_expiry:        string | null
   requires_prescription: boolean
   stock_status:          'نفد' | 'منخفض' | 'متوفر'
+  expiry_status:         'صالحة' | 'تنتهي قريباً' | 'منتهية الصلاحية' | 'لا ينتهي'
   supplier_name:         string | null
   is_active:             boolean
 }

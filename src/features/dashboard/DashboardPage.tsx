@@ -1,55 +1,45 @@
-import {
-  ShoppingCart, Package, TrendingUp, Users,
-  AlertTriangle, DollarSign
-} from 'lucide-react'
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer
-} from 'recharts'
-import { StatCard }     from '@/components/ui/StatCard'
+import { ShoppingCart, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { StatCard }       from '@/components/ui/StatCard'
 import { PageLoader, ErrorMessage } from '@/components/ui/index'
 import { useDailySummary } from '@/hooks/useSales'
 import { useStockAlerts }  from '@/hooks/useProducts'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default function DashboardPage() {
-  const { data: summary, isLoading: loadingSummary, error: errorSummary } = useDailySummary()
-  const { data: alerts,  isLoading: loadingAlerts  } = useStockAlerts()
+  const { data: summary, isLoading, error } = useDailySummary()
+  const { data: alerts, isLoading: loadingAlerts } = useStockAlerts()
 
-  if (loadingSummary) return <PageLoader />
-  if (errorSummary)   return <ErrorMessage message="تعذر تحميل البيانات" />
+  if (isLoading) return <PageLoader />
+  if (error)     return <ErrorMessage message="تعذر تحميل البيانات" />
 
-  const today    = summary?.[0]
-  const chartData = (summary ?? []).slice(0, 14).reverse().map((d: Record<string, unknown>) => ({
-    date:    formatDate(String(d.sale_date)),
-    revenue: Number(d.total_revenue) ?? 0,
-    profit:  Number(d.gross_profit)  ?? 0,
-  }))
-
+  const today     = summary?.[0]
   const alertCount = alerts?.length ?? 0
+
+  const chartData = (summary ?? []).slice(0, 14).reverse().map((d) => ({
+    date:    formatDate(String(d['sale_date'])),
+    revenue: Number(d['total_revenue']) || 0,
+    profit:  Number(d['gross_profit'])  || 0,
+  }))
 
   return (
     <div className="page-container">
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="مبيعات اليوم"
-          value={formatCurrency(today?.total_revenue ?? 0)}
-          subtitle={`${today?.total_invoices ?? 0} فاتورة`}
-          icon={ShoppingCart}
-          iconColor="text-blue-600"
+          value={formatCurrency(Number(today?.['total_revenue']) || 0)}
+          subtitle={`${today?.['total_invoices'] ?? 0} فاتورة`}
+          icon={ShoppingCart} iconColor="text-blue-600"
         />
         <StatCard
           title="الربح الإجمالي"
-          value={formatCurrency(today?.gross_profit ?? 0)}
-          icon={TrendingUp}
-          iconColor="text-green-600"
+          value={formatCurrency(Number(today?.['gross_profit']) || 0)}
+          icon={TrendingUp} iconColor="text-green-600"
         />
         <StatCard
           title="المحصّل نقداً"
-          value={formatCurrency(today?.cash_collected ?? 0)}
-          icon={DollarSign}
-          iconColor="text-emerald-600"
+          value={formatCurrency(Number(today?.['cash_collected']) || 0)}
+          icon={DollarSign} iconColor="text-emerald-600"
         />
         <StatCard
           title="تنبيهات المخزون"
@@ -60,7 +50,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Chart */}
       <div className="card">
         <div className="card-header">
           <h2 className="text-base font-semibold text-gray-900">المبيعات والأرباح (14 يوم)</h2>
@@ -89,7 +78,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stock Alerts */}
       {alertCount > 0 && (
         <div className="card">
           <div className="card-header">
@@ -99,18 +87,18 @@ export default function DashboardPage() {
             </h2>
           </div>
           <div className="divide-y divide-gray-100">
-            {(loadingAlerts ? Array(3).fill(null) : alerts ?? []).slice(0, 8).map((alert: Record<string, unknown> | null, i: number) => (
+            {(loadingAlerts ? Array(3).fill(null) : alerts ?? []).slice(0, 8).map((alert, i) => (
               <div key={i} className="px-6 py-3 flex items-center justify-between gap-4">
                 {!alert ? (
                   <div className="h-4 bg-gray-100 rounded animate-pulse w-full" />
                 ) : (
                   <>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{String(alert.name_ar)}</p>
-                      <p className="text-xs text-gray-500">مخزون: {String(alert.stock)} — الحد: {String(alert.min_stock)}</p>
+                      <p className="text-sm font-medium text-gray-900">{String((alert as Record<string,unknown>)['name_ar'])}</p>
+                      <p className="text-xs text-gray-500">مخزون: {String((alert as Record<string,unknown>)['stock'])} — الحد: {String((alert as Record<string,unknown>)['min_stock'])}</p>
                     </div>
                     <div className="flex gap-1.5 flex-wrap justify-end">
-                      {(alert.alert_types as string[]).map((type) => (
+                      {((alert as Record<string,unknown>)['alert_types'] as string[]).map((type) => (
                         <span key={type} className="badge-danger text-xs px-2 py-0.5 rounded-full">
                           {type.replace(/_/g, ' ')}
                         </span>

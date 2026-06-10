@@ -1,8 +1,5 @@
-// ================================================================
-// Customers Page
-// ================================================================
 import { useState } from 'react'
-import { Plus, Search, Phone, CreditCard } from 'lucide-react'
+import { Plus, Search, Phone } from 'lucide-react'
 import { useCustomers, useCreateCustomer, useDeleteCustomer } from '@/hooks/useEntities'
 import { Button }      from '@/components/ui/Button'
 import { Input }       from '@/components/ui/Input'
@@ -29,11 +26,11 @@ export default function CustomersPage() {
   })
 
   const filtered = (data ?? []).filter((c) =>
-    c.name.includes(search) || c.phone?.includes(search)
+    c.name.includes(search) || (c.phone ?? '').includes(search)
   )
 
   const columns: Column<Customer>[] = [
-    { key: 'name',  header: 'الاسم' },
+    { key: 'name', header: 'الاسم' },
     {
       key: 'phone', header: 'الهاتف',
       render: (r) => r.phone
@@ -53,7 +50,7 @@ export default function CustomersPage() {
     {
       key: 'actions', header: '',
       render: (r) => (
-        <Button variant="ghost" size="icon" onClick={() => setToDelete(r)}>
+        <Button variant="ghost" size="sm" onClick={() => setToDelete(r)}>
           <span className="text-red-400 text-xs">حذف</span>
         </Button>
       ),
@@ -67,7 +64,8 @@ export default function CustomersPage() {
     <div className="page-container">
       <div className="flex items-center justify-between gap-4">
         <Input placeholder="بحث بالاسم أو الهاتف..." value={search}
-          onChange={(e) => setSearch(e.target.value)} prefix={<Search className="w-4 h-4" />} className="max-w-sm" />
+          onChange={(e) => setSearch(e.target.value)}
+          prefix={<Search className="w-4 h-4" />} className="max-w-sm" />
         <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>عميل جديد</Button>
       </div>
 
@@ -77,27 +75,27 @@ export default function CustomersPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => { setCreateOpen(false); reset() }}>إلغاء</Button>
-            <Button
-              loading={createCustomer.isPending}
+            <Button loading={createCustomer.isPending}
               onClick={handleSubmit(async (d) => {
-                await createCustomer.mutateAsync(d as never)
+                await createCustomer.mutateAsync(d as Record<string, unknown>)
                 setCreateOpen(false); reset()
-              })}
-            >حفظ</Button>
+              })}>حفظ</Button>
           </>
         }
       >
         <div className="space-y-3">
-          <Input label="الاسم" {...register('name')} error={errors.name?.message} required />
-          <Input label="الهاتف" {...register('phone')} />
+          <Input label="الاسم"             {...register('name')}  error={errors.name?.message} required />
+          <Input label="الهاتف"            {...register('phone')} />
           <Input label="البريد الإلكتروني" {...register('email')} />
-          <Input label="ملاحظات" {...register('notes')} />
+          <Input label="ملاحظات"           {...register('notes')} />
         </div>
       </Modal>
 
       <ConfirmDialog
         open={!!toDelete} onClose={() => setToDelete(null)}
-        onConfirm={async () => { if (toDelete) { await deleteCustomer.mutateAsync(toDelete.id); setToDelete(null) } }}
+        onConfirm={async () => {
+          if (toDelete) { await deleteCustomer.mutateAsync(toDelete.id); setToDelete(null) }
+        }}
         title="حذف العميل" message={`هل أنت متأكد من حذف "${toDelete?.name}"؟`}
         confirmLabel="حذف" danger loading={deleteCustomer.isPending}
       />

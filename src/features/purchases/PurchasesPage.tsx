@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Plus, Search, Package } from 'lucide-react'
-import { usePurchases, useCompletePurchase } from '@/hooks/useEntities'
-import { useSuppliers } from '@/hooks/useEntities'
+import { usePurchases, useCompletePurchase, useSuppliers } from '@/hooks/useEntities'
 import { useProducts }  from '@/hooks/useProducts'
 import { Button }       from '@/components/ui/Button'
 import { Input }        from '@/components/ui/Input'
@@ -13,7 +12,8 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { purchaseSchema, type PurchaseFormData } from '@/schemas'
-import type { Purchase, PaymentMethod } from '@/types/database'
+
+type PurchaseRow = Record<string, unknown>
 
 export default function PurchasesPage() {
   const { data, isLoading, error } = usePurchases()
@@ -27,35 +27,41 @@ export default function PurchasesPage() {
   const { register, handleSubmit, control, reset, watch, formState: { errors } } =
     useForm<PurchaseFormData>({
       resolver: zodResolver(purchaseSchema),
-      defaultValues: { items: [{ product_id:'', product_name:'', batch_number:'', expiry_date:'', quantity:1, buy_price:0 }], paid_amount:0, payment_method:'cash' },
+      defaultValues: {
+        items: [{ product_id:'', product_name:'', batch_number:'', expiry_date:'', quantity:1, buy_price:0 }],
+        paid_amount: 0,
+        payment_method: 'cash',
+      },
     })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
   const watchItems = watch('items')
   const total = watchItems.reduce((s, i) => s + (i.quantity * i.buy_price || 0), 0)
 
-  const columns: Column<Purchase & Record<string,unknown>>[] = [
-    { key: 'invoice_number', header: 'رقم الفاتورة', render: (r) => <span className="font-mono text-xs">{String(r.invoice_number)}</span> },
-    { key: 'purchase_date',  header: 'التاريخ', render: (r) => formatDate(String(r.purchase_date ?? r.created_at)) },
-    { key: 'supplier_name',  header: 'المورد', render: (r) => String(r.supplier_name ?? '—') },
-    { key: 'total_amount',   header: 'الإجمالي', render: (r) => formatCurrency(Number(r.total_amount)) },
+  const columns: Column<PurchaseRow>[] = [
+    { key: 'invoice_number', header: 'رقم الفاتورة', render: (r) => <span className="font-mono text-xs">{String(r['invoice_number'])}</span> },
+    { key: 'purchase_date',  header: 'التاريخ', render: (r) => formatDate(String(r['purchase_date'] ?? r['created_at'])) },
+    { key: 'supplier_name',  header: 'المورد',  render: (r) => String(r['supplier_name'] ?? '—') },
+    { key: 'total_amount',   header: 'الإجمالي', render: (r) => formatCurrency(Number(r['total_amount'])) },
     {
       key: 'remaining', header: 'المتبقي',
       render: (r) => {
-        const rem = Number(r.remaining_amount ?? (Number(r.total_amount) - Number(r.paid_amount)))
+        const rem = Number(r['remaining_amount'] ?? (Number(r['total_amount']) - Number(r['paid_amount'])))
         return rem > 0 ? <Badge color="warning">{formatCurrency(rem)}</Badge> : <Badge color="success">مدفوع</Badge>
       },
     },
     {
       key: 'status', header: 'الحالة',
-      render: (r) => <Badge color={r.status === 'paid' ? 'success' : r.status === 'partial' ? 'warning' : 'danger'}>
-        {String(r.status_ar ?? r.status)}
-      </Badge>,
+      render: (r) => (
+        <Badge color={r['status'] === 'paid' ? 'success' : r['status'] === 'partial' ? 'warning' : 'danger'}>
+          {String(r['status_ar'] ?? r['status'])}
+        </Badge>
+      ),
     },
   ]
 
-  const filtered = (data ?? []).filter((p: Purchase & Record<string,unknown>) =>
-    String(p.invoice_number).includes(search)
+  const filtered = (data ?? []).filter((p) =>
+    String(p['invoice_number'] ?? '').includes(search)
   )
 
   if (isLoading) return <PageLoader />
@@ -70,9 +76,8 @@ export default function PurchasesPage() {
         <Button icon={<Plus className="w-4 h-4"/>} onClick={() => setCreateOpen(true)}>فاتورة شراء</Button>
       </div>
 
-      <Table columns={columns} data={filtered as never} keyField="id" emptyMessage="لا توجد مشتريات" />
+      <Table columns={columns} data={filtered} keyField="id" emptyMessage="لا توجد مشتريات" />
 
-      {/* New Purchase Modal */}
       <Modal open={createOpen} onClose={() => { setCreateOpen(false); reset() }}
         title="فاتورة شراء جديدة" size="xl"
         footer={
@@ -81,7 +86,10 @@ export default function PurchasesPage() {
             <Button loading={completePurchase.isPending}
               onClick={handleSubmit(async (d) => {
                 await completePurchase.mutateAsync({
-                  ...d,
+                  supplier_id:    d.supplier_id ?? null,
+                  paid_amount:    d.paid_amount,
+                  payment_method: d.payment_method,
+                  notes:          d.notes,
                   items: d.items.map((i) => ({
                     ...i,
                     product_name: products?.find((p) => p.id === i.product_id)?.name_ar ?? i.product_id,
@@ -96,21 +104,16 @@ export default function PurchasesPage() {
       >
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
-            <Select
-              label="المورد" placeholder="اختر مورداً..."
+            <Select label="المورد" placeholder="اختر مورداً..."
               options={(suppliers ?? []).map((s) => ({ value: s.id, label: s.name }))}
-              {...register('supplier_id')}
-            />
-            <Select
-              label="طريقة الدفع"
+              {...register('supplier_id')} />
+            <Select label="طريقة الدفع"
               options={[{value:'cash',label:'نقد'},{value:'credit',label:'بطاقة'},{value:'deferred',label:'آجل'}]}
-              {...register('payment_method')}
-            />
+              {...register('payment_method')} />
             <Input label="المبلغ المدفوع" type="number" step="0.01"
               {...register('paid_amount', { valueAsNumber: true })} />
           </div>
 
-          {/* Items */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-700">الأصناف</h3>
@@ -123,16 +126,14 @@ export default function PurchasesPage() {
             {fields.map((field, i) => (
               <div key={field.id} className="grid grid-cols-6 gap-2 items-end p-3 bg-gray-50 rounded-lg">
                 <div className="col-span-2">
-                  <Select
-                    label="المنتج" placeholder="اختر..."
+                  <Select label="المنتج" placeholder="اختر..."
                     options={(products ?? []).map((p) => ({ value: p.id, label: p.name_ar }))}
                     {...register(`items.${i}.product_id`)}
-                    error={errors.items?.[i]?.product_id?.message}
-                  />
+                    error={errors.items?.[i]?.product_id?.message} />
                 </div>
                 <Input label="رقم التشغيلة" {...register(`items.${i}.batch_number`)} placeholder="BAT-001" />
                 <Input label="الصلاحية" type="date" {...register(`items.${i}.expiry_date`)} />
-                <Input label="الكمية"  type="number" {...register(`items.${i}.quantity`,  { valueAsNumber: true })} />
+                <Input label="الكمية" type="number" {...register(`items.${i}.quantity`, { valueAsNumber: true })} />
                 <div className="flex gap-2 items-end">
                   <Input label="سعر الشراء" type="number" step="0.01" {...register(`items.${i}.buy_price`, { valueAsNumber: true })} />
                   {fields.length > 1 && (

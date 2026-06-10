@@ -1,12 +1,13 @@
 import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?:   string
-  error?:   string
-  hint?:    string
-  prefix?:  React.ReactNode
-  suffix?:  React.ReactNode
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
+  label?:  string
+  error?:  string
+  hint?:   string
+  prefix?: React.ReactNode
+  suffix?: React.ReactNode
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -21,14 +22,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {props.required && <span className="text-red-500 mr-1">*</span>}
           </label>
         )}
-
         <div className="relative flex items-center">
           {prefix && (
-            <div className="absolute right-3 text-gray-400 pointer-events-none">
-              {prefix}
-            </div>
+            <div className="absolute right-3 text-gray-400 pointer-events-none">{prefix}</div>
           )}
-
           <input
             ref={ref}
             id={inputId}
@@ -45,14 +42,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             )}
             {...props}
           />
-
           {suffix && (
-            <div className="absolute left-3 text-gray-400 pointer-events-none">
-              {suffix}
-            </div>
+            <div className="absolute left-3 text-gray-400 pointer-events-none">{suffix}</div>
           )}
         </div>
-
         {error && <p className="text-xs text-red-600">{error}</p>}
         {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
       </div>
