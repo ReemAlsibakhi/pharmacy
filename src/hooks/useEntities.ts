@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase, supabaseWrite } from '@/lib/supabase'
+import { supabase } from "@/lib/supabase"
 import type { Customer, Supplier, PaymentMethod } from '@/types/database'
 
 // ── CUSTOMERS ──────────────────────────────────────────────────
@@ -13,34 +13,34 @@ async function fetchCustomers(): Promise<Customer[]> {
 }
 
 async function createCustomer(p: Record<string, unknown>): Promise<Customer> {
-  const { data, error } = await supabaseWrite
-    .from('customers').insert(p).select().single()
+  const { data, error } = await supabase
+    .from('customers').insert(p as never).select().single()
   if (error) throw new Error(error.message)
   return data as unknown as Customer
 }
 
 async function updateCustomer(id: string, p: Record<string, unknown>): Promise<void> {
-  const { error } = await supabaseWrite
-    .from('customers').update(p).eq('id', id)
+  const { error } = await supabase
+    .from('customers').update(p as never).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteCustomer(id: string): Promise<void> {
-  const { error } = await supabaseWrite
-    .from('customers').update({ is_deleted: true }).eq('id', id)
+  const { error } = await supabase
+    .from('customers').update({ is_deleted: true } as never).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function payCustomerDebt(
   id: string, amount: number, method: PaymentMethod, notes?: string
 ): Promise<void> {
-  const { error } = await supabaseWrite.rpc('pay_customer_debt', {
+  const { error } = await supabase.rpc('pay_customer_debt' as never, {
     p_customer_id:    id,
     p_amount:         amount,
     p_payment_method: method,
     p_user_id:        null,
     p_notes:          notes ?? null,
-  })
+  } as never)
   if (error) throw new Error(error.message)
 }
 
@@ -91,21 +91,21 @@ async function fetchSuppliers(): Promise<Supplier[]> {
 }
 
 async function createSupplier(p: Record<string, unknown>): Promise<Supplier> {
-  const { data, error } = await supabaseWrite
-    .from('suppliers').insert(p).select().single()
+  const { data, error } = await supabase
+    .from('suppliers').insert(p as never).select().single()
   if (error) throw new Error(error.message)
   return data as unknown as Supplier
 }
 
 async function updateSupplier(id: string, p: Record<string, unknown>): Promise<void> {
-  const { error } = await supabaseWrite
-    .from('suppliers').update(p).eq('id', id)
+  const { error } = await supabase
+    .from('suppliers').update(p as never).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteSupplier(id: string): Promise<void> {
-  const { error } = await supabaseWrite
-    .from('suppliers').update({ is_deleted: true }).eq('id', id)
+  const { error } = await supabase
+    .from('suppliers').update({ is_deleted: true } as never).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
@@ -165,14 +165,14 @@ async function fetchPurchaseDetails(id: string): Promise<Record<string, unknown>
 }
 
 async function completePurchase(payload: CompletePurchasePayload) {
-  const { data, error } = await supabaseWrite.rpc('complete_purchase', {
+  const { data, error } = await supabase.rpc('complete_purchase' as never, {
     p_supplier_id:    payload.supplier_id,
     p_items:          payload.items,
     p_paid_amount:    payload.paid_amount,
     p_payment_method: payload.payment_method,
     p_user_id:        null,
     p_notes:          payload.notes ?? null,
-  })
+  } as never)
   if (error) throw new Error(error.message)
   return (data as { purchase_id: string; invoice_number: string }[])?.[0]
 }
