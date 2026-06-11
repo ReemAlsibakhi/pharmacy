@@ -327,13 +327,15 @@ export interface ProfitSummaryRow {
   net_profit:            number
   total_discounts:       number
 }
-// ── Row type helper ────────────────────────────────────────────
+
+// ── Row type helper ───────────────────────────────────────────
 type TableDef<R> = {
   Row:    R
   Insert: Record<string, unknown>
   Update: Record<string, unknown>
 }
 
+// ── Supabase Database Type ─────────────────────────────────────
 export interface Database {
   public: {
     Tables: {
@@ -363,12 +365,12 @@ export interface Database {
       invoice_sequences:      TableDef<Record<string, Json>>
     }
     Views: {
-      v_inventory_report:  { Row: InventoryReportRow }
-      v_stock_alerts:      { Row: StockAlertRow }
-      v_profit_summary:    { Row: ProfitSummaryRow }
-      v_daily_summary:     { Row: Record<string, Json> }
-      v_purchases_report:  { Row: Record<string, Json> }
-      v_purchase_details:  { Row: Record<string, Json> }
+      v_inventory_report:    { Row: InventoryReportRow }
+      v_stock_alerts:        { Row: StockAlertRow }
+      v_profit_summary:      { Row: ProfitSummaryRow }
+      v_daily_summary:       { Row: Record<string, Json> }
+      v_purchases_report:    { Row: Record<string, Json> }
+      v_purchase_details:    { Row: Record<string, Json> }
     }
     Functions: {
       complete_sale:     { Args: Record<string,unknown>; Returns: { sale_id: string; invoice_number: string }[] }
@@ -379,81 +381,9 @@ export interface Database {
       add_expense:       { Args: Record<string,unknown>; Returns: string }
     }
     Enums: {
-      payment_method_enum:  PaymentMethod
-      sale_status_enum:     SaleStatus
-      purchase_status_enum: PurchaseStatus
+      payment_method_enum:   PaymentMethod
+      sale_status_enum:      SaleStatus
+      purchase_status_enum:  PurchaseStatus
     }
   }
 }
-
-// // ── Row type helper ───────────────────────────────────────────
-// type TableDef<R> = {
-//   // Row:    R
-//   // Insert: Record<string, unknown>
-//   // Update: Record<string, unknown>
-//   Row: R
-//   Insert: Partial<R>
-//   Update: Partial<R>
-//   Relationships: []
-// }
-
-// // ── Supabase Database Type ─────────────────────────────────────
-// export interface Database {
-//   public: {
-//     Tables: {
-//       products:               TableDef<Product>
-//       batches:                TableDef<Batch>
-//       sales:                  TableDef<Sale>
-//       sale_items:             TableDef<SaleItem>
-//       purchases:              TableDef<Purchase>
-//       purchase_items:         TableDef<PurchaseItem>
-//       refunds:                TableDef<Refund>
-//       refund_items:           TableDef<RefundItem>
-//       customers:              TableDef<Customer>
-//       suppliers:              TableDef<Supplier>
-//       categories:             TableDef<Category>
-//       companies:              TableDef<Company>
-//       units:                  TableDef<Unit>
-//       dosage_forms:           TableDef<DosageForm>
-//       roles:                  TableDef<Role>
-//       users:                  TableDef<User>
-//       debt_payments:          TableDef<DebtPayment>
-//       operational_expenses:   TableDef<OperationalExpense>
-//       cash_register:          TableDef<CashRegister>
-//       transactions:           TableDef<Record<string, Json>>
-//       audit_log:              TableDef<Record<string, Json>>
-//       inventory_transactions: TableDef<Record<string, Json>>
-//       product_alternatives:   TableDef<Record<string, Json>>
-//       invoice_sequences:      TableDef<Record<string, Json>>
-//     }
-//     Views: {
-//       v_inventory_report:    { Row: InventoryReportRow }
-//       v_stock_alerts:        { Row: StockAlertRow }
-//       v_profit_summary:      { Row: ProfitSummaryRow }
-//       v_daily_summary:       { Row: Record<string, Json> }
-//       v_purchases_report:    { Row: Record<string, Json> }
-//       v_purchase_details:    { Row: Record<string, Json> }
-//     }
-//     Functions: {
-//       complete_sale:     { Args: Record<string,unknown>; Returns: { sale_id: string; invoice_number: string }[] }
-//       complete_purchase: { Args: Record<string,unknown>; Returns: { purchase_id: string; invoice_number: string }[] }
-//       process_refund:    { Args: Record<string,unknown>; Returns: { refund_id: string; invoice_number: string }[] }
-//       pay_customer_debt: { Args: Record<string,unknown>; Returns: string }
-//       pay_supplier_debt: { Args: Record<string,unknown>; Returns: string }
-//       add_expense:       { Args: Record<string,unknown>; Returns: string }
-//     }
-//     Enums: {
-//       // payment_method_enum:   PaymentMethod
-//       // sale_status_enum:      SaleStatus
-//       // purchase_status_enum:  PurchaseStatus
-//       payment_method: PaymentMethod
-//       payment_method_enum: PaymentMethod
-
-//       sale_status: SaleStatus
-//       sale_status_enum: SaleStatus
-
-//       purchase_status: PurchaseStatus
-//       purchase_status_enum: PurchaseStatus
-//     }
-//   }
-// }

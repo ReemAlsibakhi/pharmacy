@@ -1,41 +1,40 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseWrite } from '@/lib/supabase'
 import type { Customer, Supplier, PaymentMethod } from '@/types/database'
-
-// ── Helper: تجاوز Supabase type restrictions بشكل آمن ──────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any
 
 // ── CUSTOMERS ──────────────────────────────────────────────────
 const CUSTOMERS_KEY = 'customers'
 
 async function fetchCustomers(): Promise<Customer[]> {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('customers').select('*').eq('is_deleted', false).order('name')
   if (error) throw new Error(error.message)
-  return (data ?? []) as Customer[]
+  return (data ?? []) as unknown as Customer[]
 }
 
 async function createCustomer(p: Record<string, unknown>): Promise<Customer> {
-  const { data, error } = await db.from('customers').insert(p).select().single()
+  const { data, error } = await supabaseWrite
+    .from('customers').insert(p).select().single()
   if (error) throw new Error(error.message)
-  return data as Customer
+  return data as unknown as Customer
 }
 
 async function updateCustomer(id: string, p: Record<string, unknown>): Promise<void> {
-  const { error } = await db.from('customers').update(p).eq('id', id)
+  const { error } = await supabaseWrite
+    .from('customers').update(p).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteCustomer(id: string): Promise<void> {
-  const { error } = await db.from('customers').update({ is_deleted: true }).eq('id', id)
+  const { error } = await supabaseWrite
+    .from('customers').update({ is_deleted: true }).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function payCustomerDebt(
   id: string, amount: number, method: PaymentMethod, notes?: string
 ): Promise<void> {
-  const { error } = await db.rpc('pay_customer_debt', {
+  const { error } = await supabaseWrite.rpc('pay_customer_debt', {
     p_customer_id:    id,
     p_amount:         amount,
     p_payment_method: method,
@@ -85,25 +84,28 @@ export function usePayCustomerDebt() {
 const SUPPLIERS_KEY = 'suppliers'
 
 async function fetchSuppliers(): Promise<Supplier[]> {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('suppliers').select('*').eq('is_deleted', false).order('name')
   if (error) throw new Error(error.message)
-  return (data ?? []) as Supplier[]
+  return (data ?? []) as unknown as Supplier[]
 }
 
 async function createSupplier(p: Record<string, unknown>): Promise<Supplier> {
-  const { data, error } = await db.from('suppliers').insert(p).select().single()
+  const { data, error } = await supabaseWrite
+    .from('suppliers').insert(p).select().single()
   if (error) throw new Error(error.message)
-  return data as Supplier
+  return data as unknown as Supplier
 }
 
 async function updateSupplier(id: string, p: Record<string, unknown>): Promise<void> {
-  const { error } = await db.from('suppliers').update(p).eq('id', id)
+  const { error } = await supabaseWrite
+    .from('suppliers').update(p).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
 async function deleteSupplier(id: string): Promise<void> {
-  const { error } = await db.from('suppliers').update({ is_deleted: true }).eq('id', id)
+  const { error } = await supabaseWrite
+    .from('suppliers').update({ is_deleted: true }).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
@@ -149,21 +151,21 @@ export interface CompletePurchasePayload {
 }
 
 async function fetchPurchases(): Promise<Record<string, unknown>[]> {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('v_purchases_report').select('*').order('purchase_date', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []) as Record<string, unknown>[]
 }
 
 async function fetchPurchaseDetails(id: string): Promise<Record<string, unknown>[]> {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('v_purchase_details').select('*').eq('purchase_id', id)
   if (error) throw new Error(error.message)
-  return data ?? []
+  return (data ?? []) as Record<string, unknown>[]
 }
 
 async function completePurchase(payload: CompletePurchasePayload) {
-  const { data, error } = await db.rpc('complete_purchase', {
+  const { data, error } = await supabaseWrite.rpc('complete_purchase', {
     p_supplier_id:    payload.supplier_id,
     p_items:          payload.items,
     p_paid_amount:    payload.paid_amount,
